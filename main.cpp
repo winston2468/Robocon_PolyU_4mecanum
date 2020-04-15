@@ -44,6 +44,7 @@ void parseDS4(int buttons, int buttons2, int stick_lx, int stick_ly,
   l2 = buttons2 & (1 << 2);
   r1 = buttons2 & (1 << 1);
   l1 = buttons2 & (1 << 0);
+  //Deadzone
   if (!(stick_lx > 118 && stick_lx < 136)) {
     lstick_x = stick_lx - 127;
   } else {
@@ -173,16 +174,15 @@ void xpad_task() {
 void inverse()
 { 
     while(1){
-        // limit speed
-    vx = (float)lstick_x/100;
+     // speed scalling for left jostick XY
+     vx = (float)lstick_x/100; 
      vy = (float)lstick_y/100;
-     if(l1){w=1;}
-     else if (r1){
-         w=-1;
-     }
-     else{
-         w=0;
-     }
+     //rotation L1/R1 || right joystick x
+     if(l1 || rstick_x <0){w=1;}
+     else if (r1 || rstick_x >0){w=-1;}
+     else{w=0;}
+
+     
 
     // Prevent the value too high
     maxPVelocity = motor.getMaxPVelocity();
