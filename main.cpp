@@ -15,6 +15,8 @@ volatile int l2_trig, r2_trig;
 
 float vx=0;
 float vy=0;
+float hx=0;
+float hy=0;
 float w=0;
 int maxPVelocity = 0;
 
@@ -174,22 +176,28 @@ void xpad_task() {
 void inverse()
 { 
     while(1){
-     // speed scalling for left jostick XY
-     vx = (float)lstick_x/100; 
-     vy = (float)lstick_y/100;
-     //rotation L1/R1 || right joystick x
-     if(l1 || rstick_x <0){w=1;}
-     else if (r1 || rstick_x >0){w=-1;}
+     // speed scalling for left/right(slower speed) jostick XY
+     vy = (float)lstick_x / 100; 
+     vx = (float)lstick_y / 100 *-1;
+     hy = (float)rstick_x / 500; 
+     hx = (float)rstick_y / 500 *-1;
+
+
+     // rotation L1/R1 , L2/R2(slower speed)
+     if(l1 ){w=1.3;}
+     else if (r1 ){w=-1.3;}
+     else if (l2) {w=0.3;}
+     else if (r2) {w=-0.3;}
      else{w=0;}
 
      
 
     // Prevent the value too high
     maxPVelocity = motor.getMaxPVelocity();
-    motor1 = constrain(int((1 / wheelR) * (vx - vy - (lx + ly) * w) * radian_to_rpm_convert) , -maxPVelocity, maxPVelocity);
-    motor2 = constrain(int((1 / wheelR) * (vx + vy + (lx + ly) * w) * radian_to_rpm_convert) , -maxPVelocity, maxPVelocity);
-    motor3 = constrain(int((1 / wheelR) * (vx + vy - (lx + ly) * w) * radian_to_rpm_convert) , -maxPVelocity, maxPVelocity);
-    motor4 = constrain(int((1 / wheelR) * (vx - vy + (lx + ly) * w) * radian_to_rpm_convert) , -maxPVelocity, maxPVelocity);
+    motor1 = constrain(int((1 / wheelR) * ( ((vx - vy)+(hx - hy)) - (lx + ly) * w ) * radian_to_rpm_convert) , -maxPVelocity, maxPVelocity);
+    motor2 = constrain(int((1 / wheelR) * ( ((vx + vy)+(hx + hy)) + (lx + ly) * w ) * radian_to_rpm_convert) , -maxPVelocity, maxPVelocity);
+    motor3 = constrain(int((1 / wheelR) * ( ((vx + vy)+(hx + hy)) - (lx + ly) * w ) * radian_to_rpm_convert) , -maxPVelocity, maxPVelocity);
+    motor4 = constrain(int((1 / wheelR) * ( ((vx - vy)+(hx - hy)) + (lx + ly) * w ) * radian_to_rpm_convert) , -maxPVelocity, maxPVelocity);
     motor.update(motor1, motor2, motor3, motor4);
     ThisThread::sleep_for(10);
     }
