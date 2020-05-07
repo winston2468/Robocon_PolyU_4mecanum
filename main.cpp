@@ -174,12 +174,16 @@ void xpad_task() {
 void inverse()
 { 
     while(1){
-     // speed scalling for left jostick XY
-     vx = (float)lstick_x/100; 
-     vy = (float)lstick_y/100;
-     //rotation L1/R1 || right joystick x
-     if(l1 || rstick_x <0){w=1;}
-     else if (r1 || rstick_x >0){w=-1;}
+     // speed scalling for left/right(slower speed) jostick XY
+     vy = ((float)lstick_x / 100) + ((float)rstick_x / 500) ; 
+     vx = ((float)lstick_y / 100 *-1) + ((float)rstick_y / 500 *-1);
+
+
+     // rotation L1/R1 , L2/R2(slower speed)
+     if(l1 ){w=1.3;}
+     else if (r1 ){w=-1.3;}
+     else if (l2) {w=0.3;}
+     else if (r2) {w=-0.3;}
      else{w=0;}
 
      
