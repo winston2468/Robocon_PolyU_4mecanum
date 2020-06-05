@@ -6,17 +6,39 @@
 Serial pc(USBTX, USBRX);
 Thread DS4_thread;
 Thread quad_mecanum_thread;
+Thread pneumatic_thread;
 volatile int triangle, circle, cross, square;
 volatile int DPAD_NW, DPAD_W, DPAD_SW, DPAD_S, DPAD_SE, DPAD_E, DPAD_NE, DPAD_N;
 volatile int r3, l3, options, share, r2, l2, r1, l1;
 volatile int lstick_x, lstick_y, rstick_x, rstick_y;
 volatile int l2_trig, r2_trig;
-
-
 float vx=0;
 float vy=0;
 float w=0;
 int maxPVelocity = 0;
+
+
+
+DigitalOut pneumatic_A(D7);
+DigitalOut pneumatic_B(D6);
+
+
+
+void pneumatic_task(){
+    while(1){
+    if (triangle) {
+        pneumatic_A=1;
+    }else{
+        pneumatic_A=0;
+    }
+    if (circle) {
+        pneumatic_B=1;
+    }else{
+        pneumatic_B=0;
+    }
+    }
+}
+
 
 
 
@@ -70,6 +92,7 @@ void parseDS4(int buttons, int buttons2, int stick_lx, int stick_ly,
   r2_trig = trigger_r;
 }
 
+/* 
 // functions:if button pressed is true -> print
 void showbuttons() {
 
@@ -141,6 +164,8 @@ void showbuttons() {
   pc.printf("rstick_y %d\r\n", rstick_y);
   pc.printf("--------------------------------------------\r\n");
 }
+*/
+
 
 // attached function, USBHostXpad onUpdate
 void onXpadEvent(int buttons, int buttons2, int stick_lx, int stick_ly,
@@ -188,7 +213,7 @@ void inverse()
 
      
 
-    // Prevent the value too high
+    //Limit the robot's velocity range
     maxPVelocity = motor.getMaxPVelocity();
     motor1 = constrain(int((1 / wheelR) * (vx - vy - (lx + ly) * w) * radian_to_rpm_convert) , -maxPVelocity, maxPVelocity);
     motor2 = constrain(int((1 / wheelR) * (vx + vy + (lx + ly) * w) * radian_to_rpm_convert) , -maxPVelocity, maxPVelocity);
@@ -208,7 +233,7 @@ int main() {
   // wried timing problems with the motor controller
   pc.baud(115200);
   pc.printf("--------------------------------------------\r\n");
-
+  pneumatic_thread.start(callback(pneumatic_task));
   DS4_thread.start(callback(xpad_task));
 
   while (1) {
