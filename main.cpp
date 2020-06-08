@@ -24,20 +24,6 @@ DigitalOut pneumatic_B(D6);
 
 
 
-void pneumatic_task(){
-    while(1){
-    if (triangle) {
-        pneumatic_A=1;
-    }else{
-        pneumatic_A=0;
-    }
-    if (circle) {
-        pneumatic_B=1;
-    }else{
-        pneumatic_B=0;
-    }
-    }
-}
 
 
 
@@ -90,6 +76,7 @@ void parseDS4(int buttons, int buttons2, int stick_lx, int stick_ly,
 
   l2_trig = trigger_l;
   r2_trig = trigger_r;
+  
 }
 
 /* 
@@ -210,6 +197,16 @@ void inverse()
      else if (l2) {w=0.3;}
      else if (r2) {w=-0.3;}
      else{w=0;}
+         if (triangle) {
+        pneumatic_A=1;
+    }else{
+        pneumatic_A=0;
+    }
+    if (circle) {
+        pneumatic_B=1;
+    }else{
+        pneumatic_B=0;
+    }
 
      
 
@@ -233,7 +230,7 @@ int main() {
   // wried timing problems with the motor controller
   pc.baud(115200);
   pc.printf("--------------------------------------------\r\n");
-  pneumatic_thread.start(callback(pneumatic_task));
+  
   DS4_thread.start(callback(xpad_task));
 
   while (1) {

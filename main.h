@@ -5,7 +5,7 @@ Motor motor;
 
 // Robot parameters
 float lx = INVERSE_KINEMATICS_LX;
-float ly = INVERSE_KINEMATICS_LY;
+float ly = INVERSE_KINEMATICS_LY; //30
 float wheelR = WHEEL_RADIUS; // RoboMaster Mecanum wheel
 float gear = GEAR_RATIO;
 //float radian_to_rpm_convert = (RAD_TO_DEG / 360) * 60 * gear;

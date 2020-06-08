@@ -62,7 +62,7 @@ bool SET_NMT(NMT_COMMAND cmd)
             {
                 //PC_SEND("NMT_ALL SET TO PRE-OP\r\n");
                // LED_1_TOGGLE();
-                wait(0.01);
+                ThisThread::sleep_for(10);
             }
             else
             {
@@ -77,7 +77,7 @@ bool SET_NMT(NMT_COMMAND cmd)
             {
                 //PC_SEND("NMT_ALL RESET COMMUNICATION\r\n");
               //  LED_1_TOGGLE();
-                wait(1.0);
+                ThisThread::sleep_for(1000);
             }
             else
             {
@@ -92,7 +92,7 @@ bool SET_NMT(NMT_COMMAND cmd)
             {
                 //PC_SEND("NMT_ALL RESET NODE\r\n");
              //   LED_1_TOGGLE();
-                wait(1.0);
+                ThisThread::sleep_for(1000);
             }
             else
             {
@@ -107,7 +107,7 @@ bool SET_NMT(NMT_COMMAND cmd)
             {
                 //PC_SEND("NMT_ALL SET TO OP\r\n");
               //  LED_1_TOGGLE();
-                wait(0.01);
+                ThisThread::sleep_for(10);
             }
             else
             {
@@ -122,7 +122,7 @@ bool SET_NMT(NMT_COMMAND cmd)
             {
                 //PC_SEND("NMT_ALL STOP\r\n");
            //     LED_1_TOGGLE();
-                wait(0.01);
+                ThisThread::sleep_for(10);
             }
             else
             {
@@ -180,7 +180,7 @@ bool SDO_SEND(uint8_t node_num, const char* msg)
     //    LED_1_TOGGLE();
         //PC_SEND("SDO MSG SENT\r\n");
         GATES[node_num] = 1;          //CLOSE TRANSMISSION GATE
-        wait(0.002);
+        ThisThread::sleep_for(2);
         return 1;
     }
     else
@@ -305,7 +305,7 @@ bool PDO_SEND(uint8_t node_num, PDO_SEQUENCE seq, const char* msg, char length)
     {
         //LED_1_TOGGLE();
         //PC_SEND("PDO MSG SENT\r\n");
-        wait(0.002);
+        ThisThread::sleep_for(2);
         return 1;
     }
     else
@@ -337,7 +337,7 @@ bool PDO_INIT()
 {
     //SET ALL AXIS TO PRE-OP STATE
     if (!SET_NMT(SET_PREOP)){return 0;}
-    wait(0.1);
+    ThisThread::sleep_for(100);
 
     //MODIFIED BY USER, DEFINE PDO INITIALIZATION BEHAVIOUR
     //PC_SEND("-----NODE1 PDO INITIALIZING-----\r\n");
@@ -350,7 +350,7 @@ bool PDO_INIT()
     
     //RESET COMMUNICATION
     if (!SET_NMT(RESET_COMMU)){return 0;}
-    wait(2.0); 
+    ThisThread::sleep_for(2000); 
     
     return 1;
 }
