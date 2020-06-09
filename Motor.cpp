@@ -7,14 +7,14 @@ Motor::Motor(){
 void Motor::init() {
     //////Maxon motor
     CANOpen_SETUP(1000000, 0.1);
-    ThisThread::sleep_for(1000);
+    wait(1);
     STOP_SYNC();
     SDO_CW(1, CLEAR_FAULT);
     SDO_CW(2, CLEAR_FAULT);
     SDO_CW(3, CLEAR_FAULT);
     SDO_CW(4, CLEAR_FAULT);
     SET_NMT(RESET_COMMU);
-    ThisThread::sleep_for(10);
+    wait(0.01);
 
     //while(!PDO_INIT());
 
@@ -23,7 +23,7 @@ void Motor::init() {
     SDO_CW(3, SHUT_DOWN);
     SDO_CW(4, SHUT_DOWN);
     SET_NMT(SET_OP);
-    ThisThread::sleep_for(10);
+    wait(0.01);
 
     //**********CONFIGURATION DONE! READY FOR MOTION**********
 
@@ -89,7 +89,7 @@ void Motor::init() {
     SDO_CW(2, SWITCH_ON_ENABLE_OP);
     SDO_CW(3, SWITCH_ON_ENABLE_OP);
     SDO_CW(4, SWITCH_ON_ENABLE_OP);
-    //ThisThread::sleep_for(2000);    
+    //wait(2);    
 }
 
 void Motor::update(int motor1, int motor2, int motor3, int motor4) {
@@ -104,12 +104,12 @@ void Motor::update(int motor1, int motor2, int motor3, int motor4) {
     SET_TARGET_VELOCITY(3, motor3);
     SET_TARGET_VELOCITY(4, motor4 * -1);
 
-    ThisThread::sleep_for(2);
+    wait(0.002);
     RPDO1_EXE(1, SWITCH_ON_ENABLE_OP);
     RPDO1_EXE(2, SWITCH_ON_ENABLE_OP);
     RPDO1_EXE(3, SWITCH_ON_ENABLE_OP);
     RPDO1_EXE(4, SWITCH_ON_ENABLE_OP);
-    ThisThread::sleep_for(2);
+    wait(0.002);
 }
 
 void Motor::manual(){
