@@ -6,9 +6,9 @@ Motor::Motor(){
 
 void Motor::init() {
     //////Maxon motor
-    CANOpen_SETUP(1000000, 0.1);
+    CANOpen_SETUP(1000000);
     wait(1);
-    STOP_SYNC();
+    //STOP_SYNC();
     SDO_CW(1, CLEAR_FAULT);
     SDO_CW(2, CLEAR_FAULT);
     SDO_CW(3, CLEAR_FAULT);
@@ -27,7 +27,7 @@ void Motor::init() {
 
     //**********CONFIGURATION DONE! READY FOR MOTION**********
 
-    START_SYNC(0.05);
+    
     //TEST P-VELOCITY MODE
 
     SET_OP_MODE(1, PVM);
@@ -90,6 +90,7 @@ void Motor::init() {
     SDO_CW(3, SWITCH_ON_ENABLE_OP);
     SDO_CW(4, SWITCH_ON_ENABLE_OP);
     //wait(2);    
+    SYNC_SEND();
 }
 
 void Motor::update(int motor1, int motor2, int motor3, int motor4) {
@@ -103,13 +104,14 @@ void Motor::update(int motor1, int motor2, int motor3, int motor4) {
     SET_TARGET_VELOCITY(2, motor2 * -1);
     SET_TARGET_VELOCITY(3, motor3);
     SET_TARGET_VELOCITY(4, motor4 * -1);
-
-    wait(0.002);
+    SYNC_SEND();
+    //wait(0.002);
     RPDO1_EXE(1, SWITCH_ON_ENABLE_OP);
     RPDO1_EXE(2, SWITCH_ON_ENABLE_OP);
     RPDO1_EXE(3, SWITCH_ON_ENABLE_OP);
     RPDO1_EXE(4, SWITCH_ON_ENABLE_OP);
-    wait(0.002);
+    //wait(0.002);
+    SYNC_SEND();
 }
 
 void Motor::manual(){

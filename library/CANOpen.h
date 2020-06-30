@@ -80,7 +80,7 @@ void DATA2ARRAY(uint32_t data);
 void DATA2ARRAY(int32_t data);
 
 void SYNC_SEND();
-void START_SYNC(float sync_interval);
+void START_SYNC();
 void STOP_SYNC();
 
 bool SDO_SEND(uint8_t node_num, const char* msg);
@@ -98,7 +98,7 @@ bool RPDO_CONFIG(uint8_t node_num, PDO_SEQUENCE seq, PDO_TRANSTYPE type);
 //#######################################################################
 
 
-void CANOpen_SETUP(int freq, float sync_interval);
+void CANOpen_SETUP(int freq);
 bool PDO_INIT();
 bool PDO_SEND(uint8_t node_num, PDO_SEQUENCE seq, const char* msg, char length);
 bool RPDO1_EXE(uint8_t node_num, CW_COMMAND cmd);

@@ -8,9 +8,6 @@ volatile char GATES[9] = {0};
 //*DEFINE CANOpen Rd/Td PINS
 CAN             can1(PB_5, PB_6);
 
-//*DEFINE SYNC SENDING TIMER
-Ticker          tkr1;
-
 
 //**DEFINE COMMAND INDEX 
 //*DEFINE NMT COMMAND
@@ -155,39 +152,19 @@ void DATA2ARRAY(int32_t data)
 //*SEND SYNC FRAME
 void SYNC_SEND()
 {
-    if(!can1.write(CANMessage(0x080, SYNC_DATA, 1))){;}//{PC_SEND("SYNC FAIL\r\n");}
+    while(!can1.write(CANMessage(0x080, SYNC_DATA, 1)));//{PC_SEND("SYNC FAIL\r\n");}
 }
 
-//*START SENDING SYNC FRAME
-void START_SYNC(float sync_interval)
-{
-    tkr1.attach(&SYNC_SEND, sync_interval);   //0.1 = EVERY 100 ms
-}
 
-//*STOP SENDING SYNC FRAME
-void STOP_SYNC()
-{
-    tkr1.detach();
-}
     
 //*SDO SEND FUNCTION
 bool SDO_SEND(uint8_t node_num, const char* msg)
 {
     int cob_id = 0x600 + node_num;
     //while(GATES[node_num]!= 0);   //WAIT UNTIL TRANSMISSION GATE OPEN
-    if(can1.write(CANMessage(cob_id, msg)))
-    {
-    //    LED_1_TOGGLE();
-        //PC_SEND("SDO MSG SENT\r\n");
-        GATES[node_num] = 1;          //CLOSE TRANSMISSION GATE
-        wait(0.002);
-        return 1;
-    }
-    else
-    {
-        //PC_SEND("SDO MSG TRANSMISSION ERROR\r\n");
-        return 0;
-    }
+    while(!can1.write(CANMessage(cob_id, msg)));
+    SYNC_SEND();
+    return 1;
 }
 
 //*MORE USER FRIENDLY SDO SEND FUNCTION TO EXECUTE SPECIFIC COMMAND
@@ -301,18 +278,10 @@ bool PDO_SEND(uint8_t node_num, PDO_SEQUENCE seq, const char* msg, char length)
 {
     uint8_t sequence = seq;
     int cob_id = sequence*256 + 512 + node_num;
-    if(can1.write(CANMessage(cob_id, msg, length)))
-    {
-        //LED_1_TOGGLE();
-        //PC_SEND("PDO MSG SENT\r\n");
-        wait(0.002);
-        return 1;
-    }
-    else
-    {
-        //PC_SEND("PDO MSG TRANSMISSION ERROR\r\n");
-        return 0;
-    }
+    while(!can1.write(CANMessage(cob_id, msg, length)));
+
+    return 1;
+
 }
 
 
@@ -325,10 +294,10 @@ bool PDO_SEND(uint8_t node_num, PDO_SEQUENCE seq, const char* msg, char length)
 
 
 //*SET UP CANOpen RATE, SYNC FREQUENCY AND OTHER SETTINGS
-void CANOpen_SETUP(int freq, float sync_interval)
+void CANOpen_SETUP(int freq)
 {
     SET_CANOpen_FREQ(freq);
-    START_SYNC(sync_interval);
+    //START_SYNC(sync_interval);
     can1.attach(&CAN_RECEIVE_INTERRUPT);
 }
 
@@ -392,13 +361,14 @@ bool RPDO1_EXE(uint8_t node_num, uint16_t cwcommand)
     return 1;
 }
 
+
+
 void CAN_RECEIVE_INTERRUPT()
 {
     can1.read(CAN_RECEIVE_BUFFER);
     if(CAN_RECEIVE_BUFFER.id>0x580 && CAN_RECEIVE_BUFFER.id<=0x588){GATES[(CAN_RECEIVE_BUFFER.id-0x580)] = 0;}   //OPEN TRANSMISSION GATE
     
 }
-
 
 /////************VESC*************/////
 /*

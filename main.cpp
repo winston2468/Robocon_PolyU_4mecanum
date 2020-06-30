@@ -35,7 +35,7 @@ void parseDS4(int buttons, int buttons2, int stick_lx, int stick_ly,
   circle = buttons & (1 << 6);
   cross = buttons & (1 << 5);
   square = buttons & (1 << 4);
-  int buttons_l = buttons & 0x0f;
+  buttons_l = buttons & 0x0f;
   DPAD_NW = buttons_l == 0x07;
   DPAD_W = buttons_l == 0x06;
   DPAD_SW = buttons_l == 0x05;
