@@ -7,9 +7,10 @@ Serial pc(USBTX, USBRX);
 Thread DS4_thread;
 Thread quad_mecanum_thread;
 Thread pneumatic_thread;
-volatile int triangle, circle, cross, square;
-volatile int DPAD_NW, DPAD_W, DPAD_SW, DPAD_S, DPAD_SE, DPAD_E, DPAD_NE, DPAD_N;
-volatile int r3, l3, options, share, r2, l2, r1, l1;
+volatile bool triangle, circle, cross, square;
+volatile bool DPAD_NW, DPAD_W, DPAD_SW, DPAD_S, DPAD_SE, DPAD_E, DPAD_NE, DPAD_N;
+volatile bool options, share, r2, l2, r1, l1;
+volatile int r3, l3;
 volatile int lstick_x, lstick_y, rstick_x, rstick_y;
 volatile int l2_trig, r2_trig;
 float vx=0;
@@ -17,11 +18,10 @@ float vy=0;
 float w=0;
 int maxPVelocity = 0;
 
-
-
-DigitalOut pneumatic_A(D7);
-DigitalOut pneumatic_B(D6);
-
+volatile int buttons_l =0;
+DigitalOut pneumatic_Pick(PC_5,0);
+DigitalOut pneumatic_Throw(PB_9,0);
+DigitalOut pneumatic_Kick(PB_10,0);
 
 
 
@@ -35,7 +35,7 @@ void parseDS4(int buttons, int buttons2, int stick_lx, int stick_ly,
   circle = buttons & (1 << 6);
   cross = buttons & (1 << 5);
   square = buttons & (1 << 4);
-  int buttons_l = buttons & 0x0f;
+  buttons_l = buttons & 0x0f;
   DPAD_NW = buttons_l == 0x07;
   DPAD_W = buttons_l == 0x06;
   DPAD_SW = buttons_l == 0x05;
@@ -154,7 +154,7 @@ void showbuttons() {
 */
 
 
-// attached function, USBHostXpad onUpdate
+// attached handler, USBHostXpad onUpdate
 void onXpadEvent(int buttons, int buttons2, int stick_lx, int stick_ly,
                  int stick_rx, int stick_ry, int trigger_l, int trigger_r) {
   // pc.printf("DS4: %02x %02x %-5d %-5d %-5d %-5d %02x %02x\r\n", buttons,
@@ -169,7 +169,7 @@ void xpad_task() {
 
     while (!xpad.connect()) {
       // This sleep_for can be removed
-      ThisThread::sleep_for(100);
+      ThisThread::sleep_for(1000);
     }
 
     while (xpad.connected()) {
@@ -177,7 +177,7 @@ void xpad_task() {
       // show what buttons are pressed every 0.5s
       //showbuttons();
       // This sleep_for can be removed
-      ThisThread::sleep_for(100);
+      
     }
   }
 }
@@ -192,21 +192,13 @@ void inverse()
 
 
      // rotation L1/R1 , L2/R2(slower speed)
-     if(l1 ){w=1.3;}
-     else if (r1 ){w=-1.3;}
-     else if (l2) {w=0.3;}
-     else if (r2) {w=-0.3;}
-     else{w=0;}
-         if (triangle) {
-        pneumatic_A=1;
-    }else{
-        pneumatic_A=0;
-    }
-    if (circle) {
-        pneumatic_B=1;
-    }else{
-        pneumatic_B=0;
-    }
+     w=l1*1.3 - r1*1.3  + l2*0.3 -r2*0.3;
+
+        pneumatic_Pick=triangle;
+
+        pneumatic_Throw=circle;
+        pneumatic_Kick=cross;
+ 
 
      
 
@@ -217,7 +209,7 @@ void inverse()
     motor3 = constrain(int((1 / wheelR) * (vx + vy - (lx + ly) * w) * radian_to_rpm_convert) , -maxPVelocity, maxPVelocity);
     motor4 = constrain(int((1 / wheelR) * (vx - vy + (lx + ly) * w) * radian_to_rpm_convert) , -maxPVelocity, maxPVelocity);
     motor.update(motor1, motor2, motor3, motor4);
-    ThisThread::sleep_for(10);
+    ThisThread::sleep_for(50);
     }
 }
 
