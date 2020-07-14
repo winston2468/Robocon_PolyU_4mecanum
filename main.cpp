@@ -1,11 +1,29 @@
 
-#include "USBHostXpad.h"
+#include "./USBHostXpad/USBHostXpad.h"
 #include "mbed.h"
 #include "main.h"
+#include "./INA3221/INA3221.h"
+#include "./DT35/DT35.h"
+
+#define TAKING1 1;
+#define TAKING2 3;
+#define TAKING3 5;
+#define TAKING4 7;
+#define TAKING5 9;
+#define KICKING1 2;
+#define KICKING2 4;
+#define KICKING3 6;
+#define KICKING4 8;
+#define KICKING5 10;
+#define STOP 0;
+
+#define LEFT_GROUND 0;
+#define RIGHT_GROUND 1;
 
 Serial pc(USBTX, USBRX);
 Thread DS4_thread;
 Thread quad_mecanum_thread;
+Thread DT35_thread;
 Thread pneumatic_thread;
 volatile bool triangle, circle, cross, square;
 volatile bool DPAD_NW, DPAD_W, DPAD_SW, DPAD_S, DPAD_SE, DPAD_E, DPAD_NE, DPAD_N;
@@ -17,6 +35,22 @@ float vx=0;
 float vy=0;
 float w=0;
 int maxPVelocity = 0;
+
+volatile int playground = LEFT_GROUND;
+volatile int autoMode = 0;//
+volatile int auto_stage = STOP;
+volatile int safety_margine = 100;//
+volatile int center_distance_x = 500;//
+volatile int center_distance_y = 500;//
+volatile int key_point_y = 6910;
+volatile int pass_point1_center_y = 9790 - center_distance_y;
+volatile int pass_point2_center_y = 9520 - center_distance_y;
+volatile int pass_point3_center_y = 9250 - center_distance_y;
+volatile int pass_point4_center_y = 8980 - center_distance_y;
+volatile int pass_point5_center_y = 8710 - center_distance_y;
+volatile int distance1 = 0; //y1
+volatile int distance2 = 0; //y2
+volatile int changing_range = 2900; // acceptable changing range of motor movement in mm/ms
 
 volatile int buttons_l =0;
 DigitalOut pneumatic_Pick(PC_5,0);
@@ -182,9 +216,18 @@ void xpad_task() {
   }
 }
 
+void setAutoMode(){
+    if(autoMode == 1){
+        autoMode = 0;
+    }
+    else if(autoMode == 0){
+        auto_stage++;
+        autoMode = 1;
+    }
+}
 
 void inverse()
-{ 
+{
     while(1){
      // speed scalling for left/right(slower speed) jostick XY
      vy = ((float)lstick_x / 100) + ((float)rstick_x / 500) ; 
@@ -194,10 +237,12 @@ void inverse()
      // rotation L1/R1 , L2/R2(slower speed)
      w=l1*1.3 - r1*1.3  + l2*0.3 -r2*0.3;
 
-        pneumatic_Pick=triangle;
-
-        pneumatic_Throw=circle;
-        pneumatic_Kick=cross;
+        pneumatic_Pick=square;
+        if (triangle) {
+            setAutoMode();
+        }
+        pneumatic_Throw=cross;
+        pneumatic_Kick=square;
  
 
      
@@ -213,18 +258,269 @@ void inverse()
     }
 }
 
+void DT35_task(){
+    //setup
+    DT35 *DT35_class = new DT35(PB_9,PB_8,(0x82));;
+    DT35_class->DT35_initialization(3);
+    printf("INA3221:   FID:%d   UID:%d    Mode:%d\r\n",DT35_class->getManufacturerID(1),DT35_class->getDieID(1),DT35_class->getConfiguration(1));
+    
+    while (1){
+        if(distance1 == 0 || ((distance1 - changing_range) <= DT35_class->getBusVoltage(1, 1) && (distance1 + changing_range) >= DT35_class->getBusVoltage(1, 1)))
+        {
+            distance1 = DT35_class->getBusVoltage(1, 1);
+        }
+        if(distance2 == 0 || ((distance2 - changing_range) <= DT35_class->getBusVoltage(1, 2) && (distance2 + changing_range) >= DT35_class->getBusVoltage(1, 2)))
+        {
+            distance2 = DT35_class->getBusVoltage(1, 2);
+        }
+
+        if (triangle) {
+            setAutoMode();
+        }
+
+        if(DT35_class->getBusVoltage(1, 1) < DT35_class->getBusVoltage(1, 2)){
+            w = 1;
+        }
+        else if(DT35_class->getBusVoltage(1, 2) < DT35_class->getBusVoltage(1, 1)){
+            w = -1;
+        }
+        else {
+            w = 0;
+        }
+        if(playground == 0){
+            if(auto_stage == 1){
+                if(distance1 < (10000 - pass_point1_center_y)){
+                    vy = (float)1.28; 
+                    vx = (float)0;
+                }
+                else{
+                    vy = (float)-1.28; 
+                    vx = (float)0;
+                }
+            }
+            else if(auto_stage == 2){
+                if(distance1 < (10000 - key_point_y)){
+                    vy = (float)1.28; 
+                    vx = (float)0.3;
+                }
+                else{
+                    vy = (float)-1.28; 
+                    vx = (float)-0.3;
+                }
+            }
+            else if(auto_stage == 3){
+                if(distance1 < (10000 - pass_point2_center_y)){
+                    vy = (float)1.28; 
+                    vx = (float)0;
+                }
+                else{
+                    vy = (float)-1.28; 
+                    vx = (float)0;
+                }
+            }
+            else if(auto_stage == 4){
+                if(distance1 < (10000 - key_point_y)){
+                    vy = (float)1.28; 
+                    vx = (float)0.3;
+                }
+                else{
+                    vy = (float)-1.28; 
+                    vx = (float)-0.3;
+                }
+            }
+            else if(auto_stage == 5){
+                if(distance1 < (10000 - pass_point3_center_y)){
+                    vy = (float)1.28; 
+                    vx = (float)0;
+                }
+                else{
+                    vy = (float)-1.28; 
+                    vx = (float)0;
+                }
+            }
+            else if(auto_stage == 6){
+                if(distance1 < (10000 - key_point_y)){
+                    vy = (float)1.28; 
+                    vx = (float)0.3;
+                }
+                else{
+                    vy = (float)-1.28; 
+                    vx = (float)-0.3;
+                }
+            }
+            else if(auto_stage == 7){
+                if(distance1 < (10000 - pass_point4_center_y)){
+                    vy = (float)1.28; 
+                    vx = (float)0;
+                }
+                else{
+                    vy = (float)-1.28; 
+                    vx = (float)0;
+                }
+            }
+            else if(auto_stage == 8){
+                if(distance1 < (10000 - key_point_y)){
+                    vy = (float)1.28; 
+                    vx = (float)0.3;
+                }
+                else{
+                    vy = (float)-1.28; 
+                    vx = (float)-0.3;
+                }
+            }
+            else if(auto_stage == 9){
+                if(distance1 < (10000 - pass_point5_center_y)){
+                    vy = (float)1.28; 
+                    vx = (float)0;
+                }
+                else{
+                    vy = (float)-1.28; 
+                    vx = (float)0;
+                }
+            }
+            else if(auto_stage == 10){
+                if(distance1 < (10000 - key_point_y)){
+                    vy = (float)1.28; 
+                    vx = (float)0.3;
+                }
+                else{
+                    vy = (float)-1.28; 
+                    vx = (float)-0.3;
+                }
+            }
+        }
+        else if(playground == 1){
+            if(auto_stage == 1){
+                if(distance1 < pass_point1_center_y){
+                    vy = (float)1.28; 
+                    vx = (float)0;
+                }
+                else{
+                    vy = (float)-1.28; 
+                    vx = (float)0;
+                }
+            }
+            else if(auto_stage == 2){
+                if(distance1 < key_point_y){
+                    vy = (float)1.28; 
+                    vx = (float)-0.3;
+                }
+                else{
+                    vy = (float)-1.28; 
+                    vx = (float)0.3;
+                }
+            }
+            else if(auto_stage == 3){
+                if(distance1 < pass_point2_center_y){
+                    vy = (float)1.28; 
+                    vx = (float)0;
+                }
+                else{
+                    vy = (float)-1.28; 
+                    vx = (float)0;
+                }
+            }
+            else if(auto_stage == 4){
+                if(distance1 < key_point_y){
+                    vy = (float)1.28; 
+                    vx = (float)-0.3;
+                }
+                else{
+                    vy = (float)-1.28; 
+                    vx = (float)0.3;
+                }
+            }
+            else if(auto_stage == 5){
+                if(distance1 < pass_point3_center_y){
+                    vy = (float)1.28; 
+                    vx = (float)0;
+                }
+                else{
+                    vy = (float)-1.28; 
+                    vx = (float)0;
+                }
+            }
+            else if(auto_stage == 6){
+                if(distance1 < key_point_y){
+                    vy = (float)1.28; 
+                    vx = (float)-0.3;
+                }
+                else{
+                    vy = (float)-1.28; 
+                    vx = (float)0.3;
+                }
+            }
+            else if(auto_stage == 7){
+                if(distance1 < pass_point4_center_y){
+                    vy = (float)1.28; 
+                    vx = (float)0;
+                }
+                else{
+                    vy = (float)-1.28; 
+                    vx = (float)0;
+                }
+            }
+            else if(auto_stage == 8){
+                if(distance1 < key_point_y){
+                    vy = (float)1.28; 
+                    vx = (float)-0.3;
+                }
+                else{
+                    vy = (float)-1.28; 
+                    vx = (float)0.3;
+                }
+            }
+            else if(auto_stage == 9){
+                if(distance1 < pass_point5_center_y){
+                    vy = (float)1.28; 
+                    vx = (float)0;
+                }
+                else{
+                    vy = (float)-1.28; 
+                    vx = (float)0;
+                }
+            }
+            else if(auto_stage == 10){
+                if(distance1 < key_point_y){
+                    vy = (float)1.28; 
+                    vx = (float)-0.3;
+                }
+                else{
+                    vy = (float)-1.28; 
+                    vx = (float)0.3;
+                }
+            }
+        }
+        printf("CH1:%dV   ", DT35_class->getBusVoltage(1, 1));
+        printf("CH2:%dV   ", DT35_class->getBusVoltage(1, 2));
+
+        maxPVelocity = motor.getMaxPVelocity();
+        motor1 = constrain(int((1 / wheelR) * (vx - vy - (lx + ly) * w) * radian_to_rpm_convert) , -maxPVelocity, maxPVelocity);
+        motor2 = constrain(int((1 / wheelR) * (vx + vy + (lx + ly) * w) * radian_to_rpm_convert) , -maxPVelocity, maxPVelocity);
+        motor3 = constrain(int((1 / wheelR) * (vx + vy - (lx + ly) * w) * radian_to_rpm_convert) , -maxPVelocity, maxPVelocity);
+        motor4 = constrain(int((1 / wheelR) * (vx - vy + (lx + ly) * w) * radian_to_rpm_convert) , -maxPVelocity, maxPVelocity);
+        motor.update(motor1, motor2, motor3, motor4);
+
+        ThisThread::sleep_for(100);
+    }
+}
+
 //TODO REWRITE  + REPLACE 
 //https://github.com/ARMmbed/mbed-os/issues/9495
 //https://github.com/ARMmbed/mbed-os/issues/6714
 int main() {
-  quad_mecanum_thread.start(callback(inverse));
-  // motorInitialization(); //Must be on first line in function due to some
-  // wried timing problems with the motor controller
-  pc.baud(115200);
-  pc.printf("--------------------------------------------\r\n");
-  
-  DS4_thread.start(callback(xpad_task));
+    // motorInitialization(); //Must be on first line in function due to some
+    // wried timing problems with the motor controller
+    pc.baud(115200);
+    pc.printf("--------------------------------------------\r\n");
+    if(autoMode == 0){
+        quad_mecanum_thread.start(callback(inverse));
+    }
+    else if(autoMode == 1){
+        DT35_thread.start(callback(DT35_task));
+    }
+    DS4_thread.start(callback(xpad_task));
 
-  while (1) {
-  }
+    while (1) {
+    }
 }
