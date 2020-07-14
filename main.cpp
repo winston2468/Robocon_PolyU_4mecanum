@@ -238,9 +238,11 @@ void inverse()
      w=l1*1.3 - r1*1.3  + l2*0.3 -r2*0.3;
 
         pneumatic_Pick=square;
+        /*
         if (triangle) {
             setAutoMode();
         }
+        */
         pneumatic_Throw=cross;
         pneumatic_Kick=square;
  

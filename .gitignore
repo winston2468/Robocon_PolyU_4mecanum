@@ -8,3 +8,6 @@ mbed-os/
 
 BUILD/
 .hg/
+BUILD
+mbed-os
+USBHost
