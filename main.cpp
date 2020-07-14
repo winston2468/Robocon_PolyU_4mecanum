@@ -210,7 +210,7 @@ void inverse()
     motor3 = constrain(int((1 / wheelR) * (vx + vy - (lx + ly) * w) * radian_to_rpm_convert) , -maxPVelocity, maxPVelocity);
     motor4 = constrain(int((1 / wheelR) * (vx - vy + (lx + ly) * w) * radian_to_rpm_convert) , -maxPVelocity, maxPVelocity);
     motor.update(motor1, motor2, motor3, motor4);
-    ThisThread::sleep_for(10);
+    ThisThread::sleep_for(25);
     }
 }
 
