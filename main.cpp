@@ -111,6 +111,15 @@ void parseDS4(int buttons, int buttons2, int stick_lx, int stick_ly,
   l2_trig = trigger_l;
   r2_trig = trigger_r;
   
+        pneumatic_Pick=square;
+        pneumatic_Throw=circle;
+        pneumatic_Kick=cross;
+        /*
+        if (triangle) {
+            setAutoMode();
+        }
+        */
+
 }
 
 /* 
@@ -237,16 +246,6 @@ void inverse()
      // rotation L1/R1 , L2/R2(slower speed)
      w=l1*1.3 - r1*1.3  + l2*0.3 -r2*0.3;
 
-        pneumatic_Pick=square;
-        /*
-        if (triangle) {
-            setAutoMode();
-        }
-        */
-        pneumatic_Throw=cross;
-        pneumatic_Kick=square;
- 
-
      
 
     //Limit the robot's velocity range
@@ -256,7 +255,7 @@ void inverse()
     motor3 = constrain(int((1 / wheelR) * (vx + vy - (lx + ly) * w) * radian_to_rpm_convert) , -maxPVelocity, maxPVelocity);
     motor4 = constrain(int((1 / wheelR) * (vx - vy + (lx + ly) * w) * radian_to_rpm_convert) , -maxPVelocity, maxPVelocity);
     motor.update(motor1, motor2, motor3, motor4);
-    ThisThread::sleep_for(50);
+    ThisThread::sleep_for(25);
     }
 }
 
