@@ -19,8 +19,8 @@ float w=0;
 int maxPVelocity = 0;
 
 volatile int buttons_l =0;
-DigitalOut pneumatic_Pick(PC_5,0);
-DigitalOut pneumatic_Throw(PB_9,0);
+DigitalOut pneumatic_Pick(PC_5,1);
+DigitalOut pneumatic_Throw(PB_9,1);
 DigitalOut pneumatic_Kick(PB_10,0);
 
 
@@ -77,9 +77,9 @@ void parseDS4(int buttons, int buttons2, int stick_lx, int stick_ly,
   l2_trig = trigger_l;
   r2_trig = trigger_r;
   
-        pneumatic_Pick=triangle;
+        pneumatic_Pick=!triangle;
 
-        pneumatic_Throw=circle;
+        pneumatic_Throw=!circle;
         pneumatic_Kick=cross;
  
 }
