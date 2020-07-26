@@ -22,7 +22,7 @@ volatile int buttons_l =0;
 DigitalOut pneumatic_Pick(PC_5,1);
 DigitalOut pneumatic_Throw(PB_9,1);
 DigitalOut pneumatic_Kick(PB_10,0);
-
+bool kick_auto = 0;
 
 
 
@@ -76,12 +76,13 @@ void parseDS4(int buttons, int buttons2, int stick_lx, int stick_ly,
 
   l2_trig = trigger_l;
   r2_trig = trigger_r;
-  
+
+        if(kick_auto == 0){
         pneumatic_Pick=!triangle;
+        }
 
         pneumatic_Throw=!circle;
         pneumatic_Kick=cross;
-        /* 
         if(options){
             if(dir_mode){
             lx =INVERSE_KINEMATICS_LX;
@@ -95,7 +96,7 @@ void parseDS4(int buttons, int buttons2, int stick_lx, int stick_ly,
             }
             
         }
-*/
+
 }
 
 /* 
@@ -206,25 +207,38 @@ void inverse()
 { 
     while(1){
      // speed scalling for left/right(slower speed) jostick XY
-/* if (DPAD_W){
+if (DPAD_W){
 
-    motor1 = 8700;
+    motor1 = -8700;
     motor2 = 8700;
     motor3 = 8700;
-    motor4 = 8700;
+    motor4 = -8700;
     motor.update(motor1, motor2, motor3, motor4);
     ThisThread::sleep_for(25);
      }
      else if (square) {
-    motor1 = 8700;
+    motor1 = -8700;
     motor2 = 8700;
     motor3 = 8700;
-    motor4 = 8700;
+    motor4 = -8700;
     motor.update(motor1, motor2, motor3, motor4);
     ThisThread::sleep_for(25);
-    wait_us(300000);
+    wait_us(100000);
+    kick_auto = 1;
+    pneumatic_Pick= 0;
+    
+    wait_us(50000);
+    motor1 = 0;
+    motor2 = 0;
+    motor3 = 0;
+    motor4 = 0;
+    motor.update(motor1, motor2, motor3, motor4);
+    wait_us(50000);
+
+    pneumatic_Pick= 1;
+    kick_auto = 0;
      }
-     else{*/
+     else{
          
           vy = ((float)lstick_x / 100) + ((float)rstick_x / 500) ; 
      vx = ((float)lstick_y / 100 *-1) + ((float)rstick_y / 500 *-1);
@@ -246,7 +260,7 @@ void inverse()
     motor.update(motor1, motor2, motor3, motor4);
     ThisThread::sleep_for(25);
     }
-    //}
+    }
 }
 
 //TODO REWRITE  + REPLACE 
