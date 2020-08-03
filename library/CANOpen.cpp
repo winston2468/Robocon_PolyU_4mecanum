@@ -6,7 +6,7 @@ volatile char GATES[9] = {0};
 
 //**PIN DEFINATION
 //*DEFINE CANOpen Rd/Td PINS
-CAN             can1(PB_5, PB_6);
+CAN             can1(PB_12, PB_13);
 
 //*DEFINE SYNC SENDING TIMER
 Ticker          tkr1;

@@ -57,7 +57,7 @@ bool USBHostXpad::connect() {
         host->registerDriver(dev, xpad_intf, this, &USBHostXpad::init);
         int_in->attach(this, &USBHostXpad::rxHandler);
                 // USB Control GET_REPORT REQUEST
-        host->controlWrite(dev, 0xa1, 0x01, 0x0302, 0, 0, 0);
+        host-> controlWrite(dev, 0xa1, 0x01, 0x0302, 0, 0, 0);
         uint8_t send_hid_report[32];
         send_hid_report[0] = 0x05; // report id
         send_hid_report[1] = 0xff;

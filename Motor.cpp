@@ -100,14 +100,15 @@ void Motor::update(int motor1, int motor2, int motor3, int motor4) {
     SET_TARGET_VELOCITY(4, motor4);
     */
     SET_TARGET_VELOCITY(1, motor1);
-    SET_TARGET_VELOCITY(2, motor2 * -1);
     SET_TARGET_VELOCITY(3, motor3);
+    SET_TARGET_VELOCITY(2, motor2 * -1);
     SET_TARGET_VELOCITY(4, motor4 * -1);
 
     wait(0.002);
     RPDO1_EXE(1, SWITCH_ON_ENABLE_OP);
-    RPDO1_EXE(2, SWITCH_ON_ENABLE_OP);
     RPDO1_EXE(3, SWITCH_ON_ENABLE_OP);
+    RPDO1_EXE(2, SWITCH_ON_ENABLE_OP);
+    
     RPDO1_EXE(4, SWITCH_ON_ENABLE_OP);
     wait(0.002);
 }
