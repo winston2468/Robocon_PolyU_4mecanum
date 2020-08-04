@@ -3,14 +3,10 @@
 #include "mbed.h"
 #include "BufferedSerial.h"
 #include "main.h"
+#include "DS4_BT.h"
 
 
-Thread DS4BT_thread;
-uint8_t DS4BT_packet[15] = {0};
-
- BufferedSerial pc(USBTX, USBRX);
-  BufferedSerial device(PA_9, PA_10);
-
+ Serial pc(USBTX, USBRX);
 
 Thread DS4_thread;
 Thread quad_mecanum_thread;
@@ -109,83 +105,7 @@ void parseDS4(int buttons, int buttons2, int stick_lx, int stick_ly,
 
 
 void Parse_DS4_BT() {
-/*
-    if (DS4BT_packet[6]& (1 << 0)) {
-    pc.printf("Triangle\r\n");
-  }
-  if (DS4BT_packet[6]& (1 << 1)) {
-    pc.printf("Circle\r\n");
-  }
-  if (DS4BT_packet[6]& (1 << 2)) {
-    pc.printf("Cross\r\n");
-  }
-  if (DS4BT_packet[6]& (1 << 3)) {
-    pc.printf("Square\r\n");
-  }
-  if (DS4BT_packet[6]& (1 << 4)) {
-    pc.printf("Up\r\n");
-  }
-  if (DS4BT_packet[6]& (1 << 5)) {
-    pc.printf("Right\r\n");
-  }
-  if (DS4BT_packet[6]& (1 << 6)) {
-    pc.printf("Down\r\n");
-  }
-  if (DS4BT_packet[6]& (1 << 7)) {
-    pc.printf("Left\r\n");
-  }
-  if (DS4BT_packet[7]& (1 << 0)) {
-    pc.printf("L1\r\n");
-  }
-  if (DS4BT_packet[7]& (1 << 1)) {
-    pc.printf("L3\r\n");
-  }
-  if (DS4BT_packet[7]& (1 << 2)) {
-    pc.printf("R1\r\n");
-  }
-  if (DS4BT_packet[7]& (1 << 3)) {
-    pc.printf("R3\r\n");
-  }
-  if (DS4BT_packet[7]& (1 << 4)) {
-    pc.printf("Share\r\n");
-  }
-  if (DS4BT_packet[7]& (1 << 5)) {
-    pc.printf("Options\r\n");
-  }
-  if (DS4BT_packet[7]& (1 << 6)) {
-    pc.printf("Touchpad\r\n");
-  }
-  if (DS4BT_packet[7]& (1 << 7)) {
-    pc.printf("PS\r\n");
-  }
 
-
-
-    pc.printf("L2 %d\r\n", DS4BT_packet[4]);
-
-    pc.printf("R2 %d\r\n", DS4BT_packet[5]);
-  
-  pc.printf("lstick_x %d\r\n", DS4BT_packet[0]);
-  pc.printf("lstick_y %d\r\n", DS4BT_packet[1]);
-  pc.printf("rstick_x %d\r\n", DS4BT_packet[2]);
-  pc.printf("rstick_y %d\r\n", DS4BT_packet[3]);
-
-if (DS4BT_packet[8]& (1 << 0)) {
-    pc.printf("Touch 0\r\n");
-  }
-  if (DS4BT_packet[8]& (1 << 1)) {
-    pc.printf("Touch 1\r\n");
-  }
-  pc.printf("Angle Pitch %d\r\n", DS4BT_packet[9]);
-  pc.printf("Angle Roll %d\r\n", DS4BT_packet[10]);
-  pc.printf("Touch 0X %d\r\n", DS4BT_packet[11]);
-  pc.printf("Touch 0Y %d\r\n", DS4BT_packet[12]);
-  pc.printf("Touch 1X %d\r\n", DS4BT_packet[13]);
-  pc.printf("Touch 1Y %d\r\n", DS4BT_packet[14]);
-  
-
-  pc.printf("--------------------------------------------\r\n");
-*/
   triangle = DS4BT_packet[6]& (1 << 0);
   circle =DS4BT_packet[6]& (1 << 1);
   cross = DS4BT_packet[6]& (1 << 2);
@@ -235,6 +155,7 @@ if (DS4BT_packet[8]& (1 << 0)) {
   r2_trig = DS4BT_packet[5];
     l2_trig >=0 ? l2=l2_trig  : l2=0;
     r2_trig >=0 ? r2=r2_trig  : r2=0;
+
         if(throw_auto == 0){
         pneumatic_Throw=triangle;
         }
@@ -292,79 +213,7 @@ void DS4BT_task() {
 
  
 }
-/* 
-// functions:if button pressed is true -> print
-void showbuttons() {
 
-  if (triangle) {
-    pc.printf("triangle\r\n");
-  }
-  if (circle) {
-    pc.printf("circle\r\n");
-  }
-  if (cross) {
-    pc.printf("cross\r\n");
-  }
-  if (square) {
-    pc.printf("square\r\n");
-  }
-  if (DPAD_NW) {
-    pc.printf("DPAD_NW\r\n");
-  }
-  if (DPAD_W) {
-    pc.printf("DPAD_W\r\n");
-  }
-  if (DPAD_SW) {
-    pc.printf("DPAD_SW\r\n");
-  }
-  if (DPAD_S) {
-    pc.printf("DPAD_S\r\n");
-  }
-  if (DPAD_SE) {
-    pc.printf("DPAD_SE\r\n");
-  }
-  if (DPAD_E) {
-    pc.printf("DPAD_E\r\n");
-  }
-  if (DPAD_NE) {
-    pc.printf("DPAD_NE\r\n");
-  }
-  if (DPAD_N) {
-    pc.printf("DPAD_N\r\n");
-  }
-  if (r3) {
-    pc.printf("r3\r\n");
-  }
-  if (l3) {
-    pc.printf("l3\r\n");
-  }
-  if (options) {
-    pc.printf("options\r\n");
-  }
-  if (share) {
-    pc.printf("share\r\n");
-  }
-
-  if (l1) {
-    pc.printf("l1\r\n");
-  }
-  if (r1) {
-    pc.printf("r1\r\n");
-  }
-
-  if (r2) {
-    pc.printf("r2 %d\r\n", r2_trig);
-  }
-  if (l2) {
-    pc.printf("l2 %d\r\n", l2_trig);
-  }
-  pc.printf("lstick_x %d\r\n", lstick_x);
-  pc.printf("lstick_y %d\r\n", lstick_y);
-  pc.printf("rstick_x %d\r\n", rstick_x);
-  pc.printf("rstick_y %d\r\n", rstick_y);
-  pc.printf("--------------------------------------------\r\n");
-}
-*/
 
 
 // attached handler, USBHostXpad onUpdate
@@ -494,3 +343,78 @@ pc.baud(115200);
       //}
   }
 }
+
+
+/* 
+// functions:if button pressed is true -> print
+void showbuttons() {
+
+  if (triangle) {
+    pc.printf("triangle\r\n");
+  }
+  if (circle) {
+    pc.printf("circle\r\n");
+  }
+  if (cross) {
+    pc.printf("cross\r\n");
+  }
+  if (square) {
+    pc.printf("square\r\n");
+  }
+  if (DPAD_NW) {
+    pc.printf("DPAD_NW\r\n");
+  }
+  if (DPAD_W) {
+    pc.printf("DPAD_W\r\n");
+  }
+  if (DPAD_SW) {
+    pc.printf("DPAD_SW\r\n");
+  }
+  if (DPAD_S) {
+    pc.printf("DPAD_S\r\n");
+  }
+  if (DPAD_SE) {
+    pc.printf("DPAD_SE\r\n");
+  }
+  if (DPAD_E) {
+    pc.printf("DPAD_E\r\n");
+  }
+  if (DPAD_NE) {
+    pc.printf("DPAD_NE\r\n");
+  }
+  if (DPAD_N) {
+    pc.printf("DPAD_N\r\n");
+  }
+  if (r3) {
+    pc.printf("r3\r\n");
+  }
+  if (l3) {
+    pc.printf("l3\r\n");
+  }
+  if (options) {
+    pc.printf("options\r\n");
+  }
+  if (share) {
+    pc.printf("share\r\n");
+  }
+
+  if (l1) {
+    pc.printf("l1\r\n");
+  }
+  if (r1) {
+    pc.printf("r1\r\n");
+  }
+
+  if (r2) {
+    pc.printf("r2 %d\r\n", r2_trig);
+  }
+  if (l2) {
+    pc.printf("l2 %d\r\n", l2_trig);
+  }
+  pc.printf("lstick_x %d\r\n", lstick_x);
+  pc.printf("lstick_y %d\r\n", lstick_y);
+  pc.printf("rstick_x %d\r\n", rstick_x);
+  pc.printf("rstick_y %d\r\n", rstick_y);
+  pc.printf("--------------------------------------------\r\n");
+}
+*/
