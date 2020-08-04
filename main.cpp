@@ -260,7 +260,7 @@ if (DS4BT_packet[8]& (1 << 0)) {
 void DS4BT_task() {
 
   while (1) {
-    if (!device.readable())
+    while (!device.readable())
       ;
     if (device.getc() == 'D') {
       while (!device.readable())
@@ -272,7 +272,8 @@ void DS4BT_task() {
         if (device.getc() == '4') {
                 ready=1;
           for (int i = 0; i < 15; i++) {
-            while (!device.readable());
+            while (!device.readable())
+            ;
               DS4BT_packet[i] = device.getc();
             
           }
@@ -281,8 +282,11 @@ void DS4BT_task() {
 
 
         }
+        else{ready=0;}
       }
+      else{ready=0;}
     }
+    else{ready=0;}
      if(ready){
  Parse_DS4_BT();
  }
@@ -415,7 +419,7 @@ if (DPAD_W){
     motor3 = constrain(int((1 / wheelR) * (vx + vy - (lx + ly) * w) * radian_to_rpm_convert) , -maxPVelocity, maxPVelocity);
     motor4 = constrain(int((1 / wheelR) * (vx - vy + (lx + ly) * w) * radian_to_rpm_convert) , -maxPVelocity, maxPVelocity);
     motor.update(motor1, motor2, motor3, motor4);
-    ThisThread::sleep_for(25);
+    
      }
      else if (square) {
      vy = 4;
@@ -426,7 +430,7 @@ if (DPAD_W){
     motor3 = constrain(int((1 / wheelR) * (vx + vy - (lx + ly) * w) * radian_to_rpm_convert) , -maxPVelocity, maxPVelocity);
     motor4 = constrain(int((1 / wheelR) * (vx - vy + (lx + ly) * w) * radian_to_rpm_convert) , -maxPVelocity, maxPVelocity);
     motor.update(motor1, motor2, motor3, motor4);
-    ThisThread::sleep_for(25);
+
     wait_us(130000);
     throw_auto = 1;
     pneumatic_Throw= 1;
@@ -449,11 +453,11 @@ if (DPAD_W){
          }
          else {
                        vy = ((float)lstick_y / 100) + ((float)rstick_y / 500) ; 
-     vx = ((float)lstick_x / 100 *-1) + ((float)rstick_x / 500 *-1);
+     vx = ((float)lstick_x / 100 ) + ((float)rstick_x / 500 );
           }
 
      // rotation L1/R1 , L2/R2(slower speed)
-     w=l1*1.3 - r1*1.3  + l2*0.3 -r2*0.3;
+     w=l1*1.3 - r1*1.3  + l2_trig*0.005 -r2_trig*0.005;
 
 
 
@@ -466,7 +470,7 @@ if (DPAD_W){
     motor3 = constrain(int((1 / wheelR) * (vx + vy - (lx + ly) * w) * radian_to_rpm_convert) , -maxPVelocity, maxPVelocity);
     motor4 = constrain(int((1 / wheelR) * (vx - vy + (lx + ly) * w) * radian_to_rpm_convert) , -maxPVelocity, maxPVelocity);
     motor.update(motor1, motor2, motor3, motor4);
-    ThisThread::sleep_for(25);
+    //ThisThread::sleep_for(25);
     }
     }
 }
@@ -477,11 +481,10 @@ if (DPAD_W){
 int main() {
 device.baud(115200);
 pc.baud(115200);
-  //device.attach(&DS4BT_task, Serial::RxIrq);
+
     DS4BT_thread.start(callback(DS4BT_task));
   quad_mecanum_thread.start(callback(inverse));
-  // motorInitialization(); //Must be on first line in function due to some
-  // wried timing problems with the motor controller
+
 
   pc.printf("--------------------------------------------\r\n");
   
