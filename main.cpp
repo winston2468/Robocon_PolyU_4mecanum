@@ -1,14 +1,16 @@
 
 #include "USBHostXpad.h"
 #include "mbed.h"
-#include "BufferedSerial.h"
+
 #include "main.h"
-#include "DS4_BT.h"
+#include "DS4_BT_Serial_Host_Shield.h"
 
 
- Serial pc(USBTX, USBRX);
+Serial pc(USBTX, USBRX);
 
 Thread DS4_thread;
+Thread DS4BT_thread;
+
 Thread quad_mecanum_thread;
 volatile bool triangle, circle, cross, square;
 volatile bool DPAD_NW, DPAD_W, DPAD_SW, DPAD_S, DPAD_SE, DPAD_E, DPAD_NE, DPAD_N;
@@ -104,65 +106,87 @@ void parseDS4(int buttons, int buttons2, int stick_lx, int stick_ly,
 }
 
 
-void Parse_DS4_BT() {
-
-  triangle = DS4BT_packet[6]& (1 << 0);
-  circle =DS4BT_packet[6]& (1 << 1);
-  cross = DS4BT_packet[6]& (1 << 2);
-  square = DS4BT_packet[6]& (1 << 3);
-
-  DPAD_NW = DS4BT_packet[6]& (1 << 5) &&DS4BT_packet[6]& (1 << 4);
-  DPAD_W = DS4BT_packet[6]& (1 << 5);
-  DPAD_SW = (DS4BT_packet[6]& (1 << 5) && DS4BT_packet[6]& (1 << 6));
-  DPAD_S = DS4BT_packet[6]& (1 << 6);
-  DPAD_SE = (DS4BT_packet[6]& (1 << 6) && DS4BT_packet[6]& (1 << 7));
-  DPAD_E = DS4BT_packet[6]& (1 << 7);
-  DPAD_NE = (DS4BT_packet[6]& (1 << 7) && DS4BT_packet[6]& (1 << 4));
-  DPAD_N = DS4BT_packet[6]& (1 << 4);
-  r3 = DS4BT_packet[7]& (1 << 3);
-  l3 = DS4BT_packet[7]& (1 << 1);
-  options = DS4BT_packet[7]& (1 << 5);
-  share = DS4BT_packet[7]& (1 << 4);
-  touchpad = DS4BT_packet[7]& (1 << 6);
-  PS = DS4BT_packet[7]& (1 << 7);
-  r1 = DS4BT_packet[7]& (1 << 2);
-  l1 = DS4BT_packet[7]& (1 << 0);
 
 
-  //Deadzone
-  if (!(DS4BT_packet[0] > 118 && DS4BT_packet[0] < 136)) {
-    lstick_x = DS4BT_packet[0] - 127;
-  } else {
-    lstick_x = 0;
-  }
-  if (!(DS4BT_packet[1] > 118 && DS4BT_packet[1] < 136)) {
-    lstick_y = -1*(DS4BT_packet[1] - 127);
-  } else {
-    lstick_y = 0;
-  }
-  if (!(DS4BT_packet[2] > 118 && DS4BT_packet[2] < 136)) {
-    rstick_x = DS4BT_packet[2] - 127;
-  } else {
-    rstick_x = 0;
-  }
-  if (!(DS4BT_packet[3] > 118 && DS4BT_packet[3] < 136)) {
-    rstick_y =  -1*(DS4BT_packet[3] - 127);
-  } else {
-    rstick_y = 0;
-  }
-    
-  l2_trig = DS4BT_packet[4];
-  r2_trig = DS4BT_packet[5];
-    l2_trig >=0 ? l2=l2_trig  : l2=0;
-    r2_trig >=0 ? r2=r2_trig  : r2=0;
+void DS4BT_task() {
+int DS4_Options_Old_State = 0;
+int DS4_Triangle_Old_State =0;
+int Throw_State =0;
+int Pick_State =0;
+int DS4_Square_Old_State =0;
+int DS4_Circle_Old_State =0;
+BufferedSerial *DS4BT_BS = new BufferedSerial(PA_9, PA_10);
+DS4BT_BS->baud(115200);
+DS4_BT_Serial_Host_Shield DS4_BT_1(DS4BT_BS);
+while (1) {
+DS4_BT_1.getPacket();
+    square = DS4_BT_1.DS4_Input.Square;
+    //cross = DS4_BT_1.DS4_Input.Cross;
+    DPAD_N = DS4_BT_1.DS4_Input.DPAD_N;
+    DPAD_NW = DS4_BT_1.DS4_Input.DPAD_NW;
+    DPAD_W = DS4_BT_1.DS4_Input.DPAD_W;
+    DPAD_SW = DS4_BT_1.DS4_Input.DPAD_SW;
+    DPAD_S = DS4_BT_1.DS4_Input.DPAD_S;
+    DPAD_SE = DS4_BT_1.DS4_Input.DPAD_SE;
+    DPAD_E = DS4_BT_1.DS4_Input.DPAD_E;
+    l1 = DS4_BT_1.DS4_Input.L1;
+    r1 = DS4_BT_1.DS4_Input.R1;
+    l2_trig =DS4_BT_1.DS4_Input.L2_Trigger;
+    r2_trig =DS4_BT_1.DS4_Input.R2_Trigger;
+    lstick_x =DS4_BT_1.DS4_Input.Lstick_x;
+    lstick_y =DS4_BT_1.DS4_Input.Lstick_y;
+    rstick_x =DS4_BT_1.DS4_Input.Rstick_x;
+    rstick_y =DS4_BT_1.DS4_Input.Rstick_y;
 
-        if(throw_auto == 0){
-        pneumatic_Throw=triangle;
+pneumatic_Kick=DS4_BT_1.DS4_Input.Cross;
+
+
+        if(DS4_BT_1.DS4_Input.Triangle && (!DS4_Triangle_Old_State)){
+            DS4_Triangle_Old_State = 1;
+         if(throw_auto == 0){
+             if(Throw_State){
+pneumatic_Throw =0;
+Throw_State = 0;
+             }
+          else {
+
+              pneumatic_Throw =1;
+              Throw_State = 1;
+          }
+            }
+            
+            
+        }
+        else if ((!DS4_BT_1.DS4_Input.Triangle)&& DS4_Triangle_Old_State){
+            DS4_Triangle_Old_State = 0;
         }
 
-        pneumatic_Pick=circle;
-        pneumatic_Kick=cross;
-        if(options){
+
+        if(DS4_BT_1.DS4_Input.Circle && (!DS4_Circle_Old_State)){
+            DS4_Circle_Old_State = 1;
+
+             if(Pick_State){
+pneumatic_Pick =0;
+Pick_State = 0;
+             }
+          else {
+
+              pneumatic_Pick =1;
+              Pick_State = 1;
+          }
+            
+            
+            
+        }
+        else if ((!DS4_BT_1.DS4_Input.Circle)&& DS4_Circle_Old_State){
+            DS4_Circle_Old_State = 0;
+        }
+
+
+
+
+        if(DS4_BT_1.DS4_Input.Options && (!DS4_Options_Old_State)){
+            DS4_Options_Old_State = 1;
             if(dir_mode){
             lx =INVERSE_KINEMATICS_LX;
             ly = INVERSE_KINEMATICS_LY;
@@ -175,46 +199,13 @@ void Parse_DS4_BT() {
             }
             
         }
+        else if ((!DS4_BT_1.DS4_Input.Options)&& DS4_Options_Old_State){
+            DS4_Options_Old_State = 0;
+        }
 
 }
 
-void DS4BT_task() {
 
-  while (1) {
-    while (!device.readable())
-      ;
-    if (device.getc() == 'D') {
-      while (!device.readable())
-        ;
-      if (device.getc() == 'S') {
-
-        while (!device.readable())
-          ;
-        if (device.getc() == '4') {
-                ready=1;
-          for (int i = 0; i < 15; i++) {
-            while (!device.readable())
-            ;
-              DS4BT_packet[i] = device.getc();
-            
-          }
-
-
-
-
-        }
-        else{ready=0;}
-      }
-      else{ready=0;}
-    }
-    else{ready=0;}
-     if(ready){
- Parse_DS4_BT();
- }
-   // ThisThread::sleep_for(15);
- }
-
- 
 }
 
 
@@ -255,6 +246,7 @@ void xpad_task() {
 
 void inverse()
 { 
+
     while(1){
      // speed scalling for left/right(slower speed) jostick XY
 if (DPAD_W){
@@ -272,7 +264,7 @@ if (DPAD_W){
      }
      else if (square) {
      vy = 4;
-     vx =0 ; 
+     vx = 0; 
     maxPVelocity = motor.getMaxPVelocity();
     motor1 = constrain(int((1 / wheelR) * (vx - vy - (lx + ly) * w) * radian_to_rpm_convert) , -maxPVelocity, maxPVelocity);
     motor2 = constrain(int((1 / wheelR) * (vx + vy + (lx + ly) * w) * radian_to_rpm_convert) , -maxPVelocity, maxPVelocity);
@@ -306,7 +298,7 @@ if (DPAD_W){
           }
 
      // rotation L1/R1 , L2/R2(slower speed)
-     w=l1*1.3 - r1*1.3  + l2_trig*0.005 -r2_trig*0.005;
+     w=l1*0.3 - r1*0.3  + l2_trig*0.005 -r2_trig*0.005;
 
 
 
@@ -328,7 +320,8 @@ if (DPAD_W){
 //https://github.com/ARMmbed/mbed-os/issues/9495
 //https://github.com/ARMmbed/mbed-os/issues/6714
 int main() {
-device.baud(115200);
+
+
 pc.baud(115200);
 
     DS4BT_thread.start(callback(DS4BT_task));
@@ -340,10 +333,7 @@ pc.baud(115200);
  // DS4_thread.start(callback(xpad_task));
 
   while (1) {
-    //      if(ready){
-       
-        //ThisThread::sleep_for(1000);
-      //}
+
   }
 }
 
