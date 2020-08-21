@@ -24,7 +24,7 @@ float vx=0;
 float vy=0;
 float w=0;
 int maxPVelocity = 0;
-bool dir_mode = 0;
+int dir_mode = 0;
 volatile int buttons_l =0;
 DigitalOut pneumatic_Pick(PB_0,0);
 DigitalOut pneumatic_Throw(PA_4,0);
@@ -121,13 +121,9 @@ DS4_BT_Serial_Host_Shield DS4_BT_1(DS4BT_BS);
 while (1) {
 DS4_BT_1.getPacket();
     square = DS4_BT_1.DS4_Input.Square;
-    //cross = DS4_BT_1.DS4_Input.Cross;
     DPAD_N = DS4_BT_1.DS4_Input.DPAD_N;
-    DPAD_NW = DS4_BT_1.DS4_Input.DPAD_NW;
     DPAD_W = DS4_BT_1.DS4_Input.DPAD_W;
-    DPAD_SW = DS4_BT_1.DS4_Input.DPAD_SW;
     DPAD_S = DS4_BT_1.DS4_Input.DPAD_S;
-    DPAD_SE = DS4_BT_1.DS4_Input.DPAD_SE;
     DPAD_E = DS4_BT_1.DS4_Input.DPAD_E;
     l1 = DS4_BT_1.DS4_Input.L1;
     r1 = DS4_BT_1.DS4_Input.R1;
@@ -187,17 +183,24 @@ Pick_State = 0;
 
         if(DS4_BT_1.DS4_Input.Options && (!DS4_Options_Old_State)){
             DS4_Options_Old_State = 1;
-            if(dir_mode){
+            //ball grab 1
+            if(dir_mode>=2){
             lx =INVERSE_KINEMATICS_LX;
             ly = INVERSE_KINEMATICS_LY;
             dir_mode = 0;
             }
-            else {
+            //ball grab 2
+            else if(dir_mode==1){
+            lx =INVERSE_KINEMATICS_LX;
+            ly = INVERSE_KINEMATICS_LY;
+            dir_mode = 2;
+            }
+            //kick
+            else if(dir_mode==0){
             lx =INVERSE_KINEMATICS_LY;
             ly = INVERSE_KINEMATICS_LX;
             dir_mode = 1;
             }
-            
         }
         else if ((!DS4_BT_1.DS4_Input.Options)&& DS4_Options_Old_State){
             DS4_Options_Old_State = 0;
@@ -249,20 +252,7 @@ void inverse()
 
     while(1){
      // speed scalling for left/right(slower speed) jostick XY
-if (DPAD_W){
-
-
-     vy = 4;
-     vx =0 ; 
-    maxPVelocity = motor.getMaxPVelocity();
-    motor1 = constrain(int((1 / wheelR) * (vx - vy - (lx + ly) * w) * radian_to_rpm_convert) , -maxPVelocity, maxPVelocity);
-    motor2 = constrain(int((1 / wheelR) * (vx + vy + (lx + ly) * w) * radian_to_rpm_convert) , -maxPVelocity, maxPVelocity);
-    motor3 = constrain(int((1 / wheelR) * (vx + vy - (lx + ly) * w) * radian_to_rpm_convert) , -maxPVelocity, maxPVelocity);
-    motor4 = constrain(int((1 / wheelR) * (vx - vy + (lx + ly) * w) * radian_to_rpm_convert) , -maxPVelocity, maxPVelocity);
-    motor.update(motor1, motor2, motor3, motor4);
-    
-     }
-     else if (square) {
+ if (square) {
      vy = 4;
      vx = 0; 
     maxPVelocity = motor.getMaxPVelocity();
@@ -288,17 +278,29 @@ if (DPAD_W){
     throw_auto = 0;
      }
      else{
-         if(dir_mode){
-          vy = ((float)lstick_x / 100) + ((float)rstick_x / 500) ; 
-     vx = ((float)lstick_y / 100 *-1) + ((float)rstick_y / 500 *-1);
+         //kicking robot dir
+         if(dir_mode==1){
+
+          vy = ((float)lstick_x / 100) + ((float)rstick_x / 500) + (DPAD_W-DPAD_E)*4; 
+     vx = ((float)lstick_y / 100 *-1) + ((float)rstick_y / 500 *-1) + (DPAD_S-DPAD_N)*4;
+          // rotation L1/R1 , L2/R2(slower speed)
+     w=l1*0.3 - r1*0.3  + l2_trig*0.005 -r2_trig*0.005;
          }
-         else {
-                       vy = ((float)lstick_y / 100) + ((float)rstick_y / 500) ; 
-     vx = ((float)lstick_x / 100 ) + ((float)rstick_x / 500 );
+         
+         else if(dir_mode == 0){
+                       vy = ((float)lstick_y / 100) + ((float)rstick_y / 500) + (DPAD_N-DPAD_S)*4; 
+     vx = ((float)lstick_x / 100 ) + ((float)rstick_x / 500 )+ (DPAD_W-DPAD_E)*4;
+               // rotation L1/R1 , L2/R2(slower speed)
+     w=l1*0.3 - r1*0.3  + l2_trig*0.005 -r2_trig*0.005;
+          }
+                   else if(dir_mode == 2){
+                       vy = ((float)lstick_y / 100 *-1) + ((float)rstick_y / 500 *-1) + (DPAD_S-DPAD_N)*4; 
+     vx = ((float)lstick_x / 100 *-1) + ((float)rstick_x / 500 *-1)+ (DPAD_E-DPAD_W)*4;
+               // rotation L1/R1 , L2/R2(slower speed)
+     w=l1*0.3 - r1*0.3  + l2_trig*0.005 -r2_trig*0.005;
           }
 
-     // rotation L1/R1 , L2/R2(slower speed)
-     w=l1*0.3 - r1*0.3  + l2_trig*0.005 -r2_trig*0.005;
+
 
 
 
