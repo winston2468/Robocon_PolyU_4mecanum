@@ -183,19 +183,14 @@ Pick_State = 0;
 
         if(DS4_BT_1.DS4_Input.Options && (!DS4_Options_Old_State)){
             DS4_Options_Old_State = 1;
-            //ball grab 1
-            if(dir_mode>=2){
+
+            //kick
+             if(dir_mode==1){
             lx =INVERSE_KINEMATICS_LX;
             ly = INVERSE_KINEMATICS_LY;
             dir_mode = 0;
             }
-            //ball grab 2
-            else if(dir_mode==1){
-            lx =INVERSE_KINEMATICS_LX;
-            ly = INVERSE_KINEMATICS_LY;
-            dir_mode = 2;
-            }
-            //kick
+            //grab
             else if(dir_mode==0){
             lx =INVERSE_KINEMATICS_LY;
             ly = INVERSE_KINEMATICS_LX;
@@ -286,14 +281,14 @@ void inverse()
           // rotation L1/R1 , L2/R2(slower speed)
      w=l1*0.3 - r1*0.3  + l2_trig*0.005 -r2_trig*0.005;
          }
-         
+     /*    
          else if(dir_mode == 0){
                        vy = ((float)lstick_y / 100) + ((float)rstick_y / 500) + (DPAD_N-DPAD_S)*4; 
      vx = ((float)lstick_x / 100 ) + ((float)rstick_x / 500 )+ (DPAD_W-DPAD_E)*4;
                // rotation L1/R1 , L2/R2(slower speed)
      w=l1*0.3 - r1*0.3  + l2_trig*0.005 -r2_trig*0.005;
-          }
-                   else if(dir_mode == 2){
+          }*/ 
+                   else if(dir_mode == 0){
                        vy = ((float)lstick_y / 100 *-1) + ((float)rstick_y / 500 *-1) + (DPAD_S-DPAD_N)*4; 
      vx = ((float)lstick_x / 100 *-1) + ((float)rstick_x / 500 *-1)+ (DPAD_E-DPAD_W)*4;
                // rotation L1/R1 , L2/R2(slower speed)
